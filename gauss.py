@@ -55,7 +55,7 @@ class Var(Expr):
         VARS.append(self)
 
 class Box:
-    def __init__(self, text, color):
+    def __init__(self, color):
         ELEMS.append(self)
 
         self.left = Var()
@@ -68,14 +68,13 @@ class Box:
         self.width = self.right - self.left
         self.height = self.bot - self.top
 
-        self.text = text
         self.color = color
 
 def equate(lhs, rhs):
     sub = lhs - rhs
     CONSTRAINTS.append(sub)
 
-window = Box("", (100, 100, 100))
+window = Box((0, 0, 0))
 equate(window.left, 0)
 equate(window.top, 0)
 equate(window.right, 800)
@@ -100,9 +99,10 @@ def compute_rects():
         s = t.offset
         s += sum([to_sym(v)*c for v, c in t.coeffs.items()])
         eqs.append(s)
+
     sol = sympy.solve(eqs)
-    print(sol)
     d = dict()
+    # This will fail if the system is under-, or over-specified.
     for i, v in enumerate(VARS):
         d[v] = sol[symvars[i]]
     for e in ELEMS:
