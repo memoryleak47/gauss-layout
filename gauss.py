@@ -6,11 +6,23 @@ VARS = []
 CONSTRAINTS = []
 
 class Expr:
+    # coeffs: Var -> number
+    # offset: number
     def __init__(self):
         self.coeffs = dict()
+        self.offset = 0
 
-    # coeffs: Var -> number
+    def to_expr(a):
+        if isinstance(a, Expr):
+            return a
+        if isinstance(a, (float, int)):
+            e = Expr()
+            e.offset = a
+            return e
+        raise "ohno"
+
     def __add__(x, y):
+        y = Expr.to_expr(y)
         assert(isinstance(y, Expr))
 
         out = Expr()
@@ -18,6 +30,7 @@ class Expr:
             xc = x.coeffs[v] if v in x.coeffs else 0
             yc = y.coeffs[v] if v in y.coeffs else 0
             out.coeffs[v] = xc + yc
+        out.offset = x.offset + y.offset
         return out
 
     def __mul__(x, y):
@@ -25,6 +38,7 @@ class Expr:
         out = Expr()
         for (a, c) in x.coeffs.items():
             out.coeffs[a] = c*y
+        out.offset = x.offset * y
         return out
 
     def __truediv__(x, y):
@@ -37,6 +51,7 @@ class Var(Expr):
     def __init__(self):
         self.coeffs = dict()
         self.coeffs[self] = 1
+        self.offset = 0
         VARS.append(self)
 
 class Box:
@@ -58,7 +73,7 @@ class Box:
 
 def equate(lhs, rhs):
     sub = lhs - rhs
-    CONSTRAINTS.append(sub.coeffs)
+    CONSTRAINTS.append(sub)
 
 window = Box("", (100, 100, 100))
 equate(window.left, 0)
@@ -70,7 +85,7 @@ def ev(coeffs, d):
     s = 0
     for (v, c) in coeffs.items():
         s += d[v] * c
-    return s
+    return int(s)
 
 # adds a .rect: pg.Rect
 def compute_rects():
@@ -82,7 +97,8 @@ def compute_rects():
 
     eqs = []
     for t in CONSTRAINTS:
-        s = sum([to_sym(v)*c for v, c in t.items()])
+        s = t.offset
+        s += sum([to_sym(v)*c for v, c in t.coeffs.items()])
         eqs.append(s)
     sol = sympy.solve(eqs)
     print(sol)
