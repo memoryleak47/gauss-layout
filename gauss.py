@@ -6,7 +6,7 @@ VARS = []
 CONSTRAINTS = []
 
 class Expr:
-    # coeffs: Var -> number
+    # coeffs: VarIndex -> number
     # offset: number
     def __init__(self):
         self.coeffs = dict()
@@ -26,10 +26,10 @@ class Expr:
         assert(isinstance(y, Expr))
 
         out = Expr()
-        for v in VARS:
-            xc = x.coeffs[v] if v in x.coeffs else 0
-            yc = y.coeffs[v] if v in y.coeffs else 0
-            out.coeffs[v] = xc + yc
+        for i, v in enumerate(VARS):
+            xc = x.coeffs[i] if i in x.coeffs else 0
+            yc = y.coeffs[i] if i in y.coeffs else 0
+            out.coeffs[i] = xc + yc
         out.offset = x.offset + y.offset
         return out
 
@@ -47,12 +47,16 @@ class Expr:
     def __sub__(x, y):
         return x + (y * (-1))
 
+    def __eq__(x, y):
+        return x - y
+
 class Var(Expr):
     def __init__(self):
         self.coeffs = dict()
-        self.coeffs[self] = 1
         self.offset = 0
+        i = len(VARS)
         VARS.append(self)
+        self.coeffs[i] = 1
 
 class Box:
     def __init__(self, color):
@@ -70,15 +74,15 @@ class Box:
 
         self.color = color
 
-def equate(lhs, rhs):
-    sub = lhs - rhs
-    CONSTRAINTS.append(sub)
+def add(e):
+    CONSTRAINTS.append(e)
 
 window = Box((0, 0, 0))
-equate(window.left, 0)
-equate(window.top, 0)
-equate(window.right, 800)
-equate(window.bot, 600)
+
+add(window.left == 0)
+add(window.top == 0)
+add(window.right == 800)
+add(window.bot == 600)
 
 def ev(e, d):
     s = e.offset
@@ -90,21 +94,17 @@ def ev(e, d):
 def compute_rects():
     symvars = sympy.symbols('v:' + str(len(VARS)))
 
-    def to_sym(v):
-        i = VARS.index(v)
-        return symvars[i]
-
     eqs = []
     for t in CONSTRAINTS:
         s = t.offset
-        s += sum([to_sym(v)*c for v, c in t.coeffs.items()])
+        s += sum([symvars[v]*c for v, c in t.coeffs.items()])
         eqs.append(s)
 
     sol = sympy.solve(eqs)
     d = dict()
     # This will fail if the system is under-, or over-specified.
     for i, v in enumerate(VARS):
-        d[v] = sol[symvars[i]]
+        d[i] = sol[symvars[i]]
     for e in ELEMS:
         l = ev(e.left, d)
         t = ev(e.top, d)
