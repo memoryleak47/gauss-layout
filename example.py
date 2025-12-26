@@ -29,9 +29,9 @@ gs.add(b3.right + out_gap == gs.window.right)
 gs.add(in_gap == out_gap / 2) # the distance to the border should be double of the distance between boxes
 gs.add(h == in_gap*4) # the gap between elements shall be a fourth of the height of the boxes
 
-# They have the same width
-gs.add(b1.width == b2.width)
-gs.add(b1.width == b3.width)
+# Each consecutive box doubles in size
+gs.add(b1.width*2 == b2.width)
+gs.add(b2.width*2 == b3.width)
 
 # Show it!
 gs.run()
