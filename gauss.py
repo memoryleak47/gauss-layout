@@ -80,9 +80,9 @@ equate(window.top, 0)
 equate(window.right, 800)
 equate(window.bot, 600)
 
-def ev(coeffs, d):
-    s = 0
-    for (v, c) in coeffs.items():
+def ev(e, d):
+    s = e.offset
+    for (v, c) in e.coeffs.items():
         s += d[v] * c
     return int(s)
 
@@ -106,10 +106,10 @@ def compute_rects():
     for i, v in enumerate(VARS):
         d[v] = sol[symvars[i]]
     for e in ELEMS:
-        l = ev(e.left.coeffs, d)
-        t = ev(e.top.coeffs, d)
-        w = ev(e.width.coeffs, d)
-        h = ev(e.height.coeffs, d)
+        l = ev(e.left, d)
+        t = ev(e.top, d)
+        w = ev(e.width, d)
+        h = ev(e.height, d)
         e.rect = pg.Rect(l, t, w, h)
 
 def run():
