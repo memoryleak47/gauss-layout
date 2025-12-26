@@ -1,50 +1,42 @@
 import pygame as pg
 
 ELEMS = []
+VARS = []
+CONSTRAINTS = []
 
 class Expr:
+    def __init__(self):
+        self.coeffs = dict()
+
+    # coeffs: Var -> number
     def __add__(x, y):
-        op = Op()
-        op.lhs = x
-        op.rhs = y
-        op.op_str = "+"
-        return op
+        assert(isinstance(y, Expr))
 
-    def __truediv__(x, y):
-        op = Op()
-        op.lhs = x
-        op.rhs = y
-        op.op_str = "/"
-        return op
-
-    def __sub__(x, y):
-        op = Op()
-        op.lhs = x
-        op.rhs = y
-        op.op_str = "-"
-        return op
+        out = Expr()
+        for v in VARS:
+            xc = x.coeffs[v] if v in x.coeffs else 0
+            yc = y.coeffs[v] if v in y.coeffs else 0
+            out.coeffs[v] = xc + yc
+        return out
 
     def __mul__(x, y):
-        op = Op()
-        op.lhs = x
-        op.rhs = y
-        op.op_str = "*"
-        return op
+        assert(isinstance(y, (int, float)))
+        out = Expr()
+        for (a, c) in x.coeffs.items():
+            out.coeffs[a] = c*y
+        return out
 
-    def __eq__(x, y):
-        eq = Equ()
-        eq.lhs = x
-        eq.rhs = y
-        return eq
+    def __truediv__(x, y):
+        return x * (1/y)
 
-class Op(Expr):
-    # lhs: Expr
-    # rhs: Expr
-    # op_str: str
-    pass
+    def __sub__(x, y):
+        return x + (y * (-1))
 
 class Var(Expr):
-    pass
+    def __init__(self):
+        self.coeffs = dict()
+        self.coeffs[self] = 1
+        VARS.append(self)
 
 class Box:
     def __init__(self, text, color):
@@ -62,17 +54,12 @@ class Box:
 
         self.text = text
         self.color = color
-        self.rect = pg.Rect(100, 200, 300, 400)
 
 window = Box("", (100, 100, 100))
 
-class Equ:
-    # lhs: Expr
-    # rhs: Expr
-    pass
-
-def constrain(eq: Equ):
-    print(eq.lhs, eq.rhs)
+def equate(lhs, rhs):
+    print(lhs, rhs)
+    CONSTRAINTS.append((lhs, rhs))
 
 # adds a .rect: pg.Rect
 def compute_rects():
