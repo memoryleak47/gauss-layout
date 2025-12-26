@@ -1,4 +1,5 @@
 import pygame as pg
+import sympy
 
 ELEMS = []
 VARS = []
@@ -55,15 +56,45 @@ class Box:
         self.text = text
         self.color = color
 
-window = Box("", (100, 100, 100))
-
 def equate(lhs, rhs):
-    print(lhs, rhs)
-    CONSTRAINTS.append((lhs, rhs))
+    sub = lhs - rhs
+    CONSTRAINTS.append(sub.coeffs)
+
+window = Box("", (100, 100, 100))
+equate(window.left, 0)
+equate(window.top, 0)
+equate(window.right, 800)
+equate(window.bot, 600)
+
+def ev(coeffs, d):
+    s = 0
+    for (v, c) in coeffs.items():
+        s += d[v] * c
+    return s
 
 # adds a .rect: pg.Rect
 def compute_rects():
-    pass
+    symvars = sympy.symbols('v:' + str(len(VARS)))
+
+    def to_sym(v):
+        i = VARS.index(v)
+        return symvars[i]
+
+    eqs = []
+    for t in CONSTRAINTS:
+        s = sum([to_sym(v)*c for v, c in t.items()])
+        eqs.append(s)
+    sol = sympy.solve(eqs)
+    print(sol)
+    d = dict()
+    for i, v in enumerate(VARS):
+        d[v] = sol[symvars[i]]
+    for e in ELEMS:
+        l = ev(e.left.coeffs, d)
+        t = ev(e.top.coeffs, d)
+        w = ev(e.width.coeffs, d)
+        h = ev(e.height.coeffs, d)
+        e.rect = pg.Rect(l, t, w, h)
 
 def run():
     compute_rects()
