@@ -21,7 +21,7 @@ gs.add(b3.center_y == gs.window.center_y)
 in_gap = gs.Var() # Gap between consecutive boxes
 out_gap = gs.Var() # Gap between window border and box
 
-gs.add(b1.left == gs.window.left + out_gap)
+gs.add(gs.window.left + out_gap == b1.left)
 gs.add(b1.right + in_gap == b2.left)
 gs.add(b2.right + in_gap == b3.left)
 gs.add(b3.right + out_gap == gs.window.right)
